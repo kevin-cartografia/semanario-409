@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <title>PDF.js Viewer</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #pdf-viewer {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="pdf-viewer"></canvas>
+    <script src="pdf.js"></script>
+    <script src="pdf.worker.js"></script>
+    <script>
+        // Configuración de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdf.worker.js';
+
+        // Función para renderizar el PDF
+        function renderPDF(url) {
+            const loadingTask = pdfjsLib.getDocument(url);
+            loadingTask.promise.then(pdf => {
+                console.log('PDF loaded');
+                
+                // Fetch the first page
+                pdf.getPage(1).then(page => {
+                    console.log('Page loaded');
+
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale });
+
+                    // Prepare canvas using PDF page dimensions
+                    const canvas = document.getElementById('pdf-viewer');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    // Render PDF page into canvas context
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext).promise.then(() => {
+                        console.log('Page rendered');
+                    });
+                });
+            }, reason => {
+                console.error('Error loading PDF: ', reason);
+            });
+        }
+
+        // Ruta al archivo PDF
+        const pdfUrl = 'EC409.pdf';
+        renderPDF(pdfUrl);
+    </script>
+</body>
+</html>
